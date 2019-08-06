@@ -89,9 +89,17 @@ int main() {
           auto sensor_fusion = j[1]["sensor_fusion"];
 
           json msgJson;
-
+          double dist_inc = 0.5;
           vector<double> next_x_vals;
           vector<double> next_y_vals;
+          
+          for(int i=0; i<50; i++){
+          	double next_s = car_s + dist_inc*i;
+            double next_d = 6;
+            vector<double> next_xy = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            next_x_vals.push_back(next_xy[0]);  
+            next_y_vals.push_back(next_xy[1]);
+          }
 
           /**
            * TODO: define a path made up of (x,y) points that the car will visit
