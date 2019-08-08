@@ -49,8 +49,9 @@ int main() {
     map_waypoints_dx.push_back(d_x);
     map_waypoints_dy.push_back(d_y);
   }
-
-  h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
+  int lane = 1;
+  double ref_vel = 49.5;
+  h.onMessage([&lane, &ref_vel, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
@@ -89,26 +90,19 @@ int main() {
           auto sensor_fusion = j[1]["sensor_fusion"];
 
           json msgJson;
-          double dist_inc = 0.5;
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
           
-          for(int i=0; i<50; i++){
-          	double next_s = car_s + dist_inc*i;
-            double next_d = 6;
-            vector<double> next_xy = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            next_x_vals.push_back(next_xy[0]);  
-            next_y_vals.push_back(next_xy[1]);
-          }
-
+          vector<vector<double>> next_vals = choose_next_trajectory(lane, ref_vel, car_x, car_y, car_yaw, car_s, car_d, 
+                                               map_waypoints_s, map_waypoints_x, map_waypoints_y,
+                                             previous_path_x, previous_path_y);
+          
           /**
            * TODO: define a path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
            */
 
 
-          msgJson["next_x"] = next_x_vals;
-          msgJson["next_y"] = next_y_vals;
+          msgJson["next_x"] = next_vals[0];
+          msgJson["next_y"] = next_vals[1];
 
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
