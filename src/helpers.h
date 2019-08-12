@@ -155,6 +155,68 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
   return {x,y};
 }
 
+int get_lane(int d){
+	return (int)(d/4);
+}
+
+vector<double> get_predictions_from_sensor_fusion(vector<vector<double>> sensor_fusion, int prev_size, double car_s, int lane){
+  bool car_left = false;
+  bool car_front = false;
+  bool car_right = false;
+  double front_speed;
+  for(int i = 0; i < sensor_fusion.size(); i++){
+    double check_car_s = sensor_fusion[i][5];
+    // filter the cars that are too far from the ego car
+    if(abs(check_car_s - car_s) < 100){
+      double check_car_d = sensor_fusion[i][6];
+      int check_car_lane = get_lane(check_car_d);
+      // check if the car in front is too close
+      double check_car_vx = sensor_fusion[i][3];
+      double check_car_vy = sensor_fusion[i][4];
+      double check_car_speed = sqrt(pow(check_car_vx, 2) + pow(check_car_vy, 2));
+      check_car_s = check_car_s + prev_size * 0.02 * check_car_speed;
+      if(check_car_lane == lane){
+        if((check_car_s > car_s)&& (check_car_s < car_s + 30)){
+          car_front = true;
+          front_speed = check_car_speed * 2.24;
+        }
+      } else {
+        if((check_car_lane == lane - 1) && (abs(check_car_s - car_s) < 30)  || lane == 0)
+          car_left = true;
+        if((check_car_lane == lane + 1) && (abs(check_car_s - car_s) < 30) || lane == 2)
+          car_right = true;
+      }
+    }
+  }
+  
+  return {car_left, car_right, car_front, front_speed};
+}
+
+vector<std::pair<int, double>> behaviour_planning(bool car_left, bool car_right, bool car_front, int lane, double ref_vel, double front_speed){
+  vector<std::pair<int, double>> successor_lanes_ref_vels;
+  if(car_front && !car_left){
+    successor_lanes_ref_vels.push_back(std::make_pair(std::max(lane - 1, 0), std::min(49.5, ref_vel + .224)));
+  }
+
+  if(car_front && !car_right){
+    successor_lanes_ref_vels.push_back(std::make_pair(std::min(lane + 1, 2),std::min(49.5, ref_vel + .224)));
+  }
+
+  if(car_front && car_left && car_right){
+    successor_lanes_ref_vels.push_back(std::make_pair(lane, std::min(front_speed, ref_vel - .224)));
+  }
+
+  if(!car_front){
+    successor_lanes_ref_vels.push_back(std::make_pair(lane, std::min(49.5, ref_vel + .224)));
+  }
+  return successor_lanes_ref_vels;
+}
+
+double calculate_cost(int lane, double car_speed, int successor_lane, double successor_ref_vel, vector<vector<double>> next_vals){
+  double cost = 0;
+  return 0;
+}
+
 vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double car_x, double car_y, double car_yaw, double car_s, double car_d, 
                                               const vector<double> &map_waypoints_s, const vector<double> &map_waypoints_x, const vector<double> &map_waypoints_y,
                                              vector<double> previous_path_x, vector<double> previous_path_y ){

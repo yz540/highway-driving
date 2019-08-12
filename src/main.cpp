@@ -1,8 +1,10 @@
 #include <uWS/uWS.h>
 #include <fstream>
 #include <iostream>
+#include <algorithm>    // std::max
 #include <string>
 #include <vector>
+#include <utility>      // std::pair, std::make_pair
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
@@ -87,22 +89,45 @@ int main() {
 
           // Sensor Fusion Data, a list of all other cars on the same side 
           //   of the road.
-          auto sensor_fusion = j[1]["sensor_fusion"];
-
-          json msgJson;
+          vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
           
-          vector<vector<double>> next_vals = choose_next_trajectory(lane, ref_vel, car_x, car_y, car_yaw, car_s, car_d, 
+          int prev_size = previous_path_x.size();
+          if(prev_size >0)
+            car_s = end_path_s;
+          vector<double> predictions = get_predictions_from_sensor_fusion(sensor_fusion, prev_size, car_s, lane);
+
+          // Behaviour planning
+          bool car_front = predictions[2];
+          double front_speed = predictions[3];
+          bool car_left = predictions[0];
+          bool car_right = predictions[1];
+          
+          std::vector<std::pair<int, double>> successors = behaviour_planning(car_left, car_right, car_front, lane, ref_vel, front_speed);
+          // choose the least cost trajectory
+          double lowest_cost = 999999;
+          vector<vector<double>> best_trajectory;
+          for(int i = 0; i < successors.size(); i++){
+            int successor_lane = successors[i].first;
+            double successor_ref_vel = successors[i].second;
+            vector<vector<double>> next_vals = choose_next_trajectory(lane, ref_vel, car_x, car_y, car_yaw, car_s, car_d, 
                                                map_waypoints_s, map_waypoints_x, map_waypoints_y,
                                              previous_path_x, previous_path_y);
-          
+            // calculate cost
+            double cost = calculate_cost(lane, car_speed, successor_lane, successor_ref_vel, next_vals);
+          // get the lowest cost and corresponding trajectory
+            if(cost < lowest_cost){
+              best_trajectory = next_vals;
+              lowest_cost = cost;
+            }
+          }
+          // Trajectory generation
           /**
-           * TODO: define a path made up of (x,y) points that the car will visit
+           * generate the best path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
            */
-
-
-          msgJson["next_x"] = next_vals[0];
-          msgJson["next_y"] = next_vals[1];
+          json msgJson;
+          msgJson["next_x"] = best_trajectory[0];
+          msgJson["next_y"] = best_trajectory[1];
 
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
