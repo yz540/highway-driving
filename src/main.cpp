@@ -52,7 +52,7 @@ int main() {
     map_waypoints_dy.push_back(d_y);
   }
   int lane = 1;
-  double ref_vel = 49.5;
+  double ref_vel = 0;
   h.onMessage([&lane, &ref_vel, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
@@ -60,6 +60,7 @@ int main() {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+                std::cout << "new start............." << std::endl;
     if (length && length > 2 && data[0] == '4' && data[1] == '2') {
 
       auto s = hasData(data);
@@ -79,6 +80,7 @@ int main() {
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
           double car_speed = j[1]["speed"];
+          ref_vel = car_speed;
 
           // Previous path data given to the Planner
           auto previous_path_x = j[1]["previous_path_x"];
@@ -105,22 +107,27 @@ int main() {
           std::vector<std::pair<int, double>> successors = behaviour_planning(car_left, car_right, car_front, lane, ref_vel, front_speed);
           // choose the least cost trajectory
           double lowest_cost = 999999;
-          vector<vector<double>> best_trajectory;
+          std::cout<< "current state: " <<lane << "   " << car_speed << std::endl;
+          std::cout<< "predictions: " << car_front << car_left << car_right<< std::endl;
+          std::cout<< "successors size:<<<<<<<<<< " << successors.size() << std::endl;
           for(int i = 0; i < successors.size(); i++){
+            
             int successor_lane = successors[i].first;
             double successor_ref_vel = successors[i].second;
-            vector<vector<double>> next_vals = choose_next_trajectory(lane, ref_vel, car_x, car_y, car_yaw, car_s, car_d, 
-                                               map_waypoints_s, map_waypoints_x, map_waypoints_y,
-                                             previous_path_x, previous_path_y);
             // calculate cost
-            double cost = calculate_cost(lane, car_speed, successor_lane, successor_ref_vel, next_vals);
+            double cost = calculate_cost(lane, car_speed, successor_lane, successor_ref_vel);
           // get the lowest cost and corresponding trajectory
             if(cost < lowest_cost){
-              best_trajectory = next_vals;
               lowest_cost = cost;
+              lane = successor_lane;
+              ref_vel = successor_ref_vel;
             }
           }
+          std::cout<< "best successor choice:  " << lane << "     " << ref_vel << std::endl;
           // Trajectory generation
+          vector<vector<double>> best_trajectory = choose_next_trajectory(lane, ref_vel, car_x, car_y, car_yaw, car_s, car_d, 
+                                               map_waypoints_s, map_waypoints_x, map_waypoints_y,
+                                             previous_path_x, previous_path_y);
           /**
            * generate the best path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds

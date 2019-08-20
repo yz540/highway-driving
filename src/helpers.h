@@ -176,7 +176,7 @@ vector<double> get_predictions_from_sensor_fusion(vector<vector<double>> sensor_
       double check_car_speed = sqrt(pow(check_car_vx, 2) + pow(check_car_vy, 2));
       check_car_s = check_car_s + prev_size * 0.02 * check_car_speed;
       if(check_car_lane == lane){
-        if((check_car_s > car_s)&& (check_car_s < car_s + 30)){
+        if((check_car_s > car_s) && (check_car_s < car_s + 30)){
           car_front = true;
           front_speed = check_car_speed * 2.24;
         }
@@ -195,26 +195,51 @@ vector<double> get_predictions_from_sensor_fusion(vector<vector<double>> sensor_
 vector<std::pair<int, double>> behaviour_planning(bool car_left, bool car_right, bool car_front, int lane, double ref_vel, double front_speed){
   vector<std::pair<int, double>> successor_lanes_ref_vels;
   if(car_front && !car_left){
-    successor_lanes_ref_vels.push_back(std::make_pair(std::max(lane - 1, 0), std::min(49.5, ref_vel + .224)));
+    successor_lanes_ref_vels.push_back(std::make_pair(std::max(lane - 1, 0), std::min(49.5, ref_vel + 2.24)));
   }
 
   if(car_front && !car_right){
-    successor_lanes_ref_vels.push_back(std::make_pair(std::min(lane + 1, 2),std::min(49.5, ref_vel + .224)));
+    successor_lanes_ref_vels.push_back(std::make_pair(std::min(lane + 1, 2), std::min(49.5, ref_vel + 2.24)));
   }
 
   if(car_front && car_left && car_right){
-    successor_lanes_ref_vels.push_back(std::make_pair(lane, std::min(front_speed, ref_vel - .224)));
+    if(front_speed < ref_vel)
+      successor_lanes_ref_vels.push_back(std::make_pair(lane, ref_vel - 2.24));
   }
 
   if(!car_front){
-    successor_lanes_ref_vels.push_back(std::make_pair(lane, std::min(49.5, ref_vel + .224)));
+    successor_lanes_ref_vels.push_back(std::make_pair(lane, std::min(49.5, ref_vel + 2.24)));
   }
   return successor_lanes_ref_vels;
 }
 
-double calculate_cost(int lane, double car_speed, int successor_lane, double successor_ref_vel, vector<vector<double>> next_vals){
-  double cost = 0;
-  return 0;
+double calculate_cost(int lane, double car_speed, int successor_lane, double successor_ref_vel){
+  
+  double cost_lane_change = std::abs(lane - successor_lane)/3;
+// cost of acceleration  
+  double acc = (successor_ref_vel - car_speed)/(0.02*2.24);
+  double cost_acc = 0;
+  if(acc<-9.8 || acc >9.8)
+    cost_acc = 1;
+  else
+    cost_acc = std::abs(acc)/9.8;
+  
+//   cost of speed
+  double target_speed = 49.5;
+  double cost_speed = 0;
+  if(car_speed < target_speed)
+    cost_speed = 0.8 * (target_speed - car_speed) / target_speed;
+  else{
+    if(car_speed > 50)
+      cost_speed = 1;
+    else
+      cost_speed = (car_speed - target_speed) / 0.5;
+  }
+  
+//   cost of collision
+  double cost_collision = 0;
+  
+  return cost_lane_change + cost_acc + cost_speed + cost_collision;
 }
 
 vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double car_x, double car_y, double car_yaw, double car_s, double car_d, 
@@ -227,7 +252,6 @@ vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double c
   double ref_yaw = deg2rad(car_yaw);
   vector<double> ptsx;
   vector<double> ptsy;
-  
   // find two points in the past
   if ( prev_size < 2 ) {    //Use two points thats makes path tangent to the car
     double prev_car_x = car_x - cos(car_yaw);
@@ -246,17 +270,16 @@ vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double c
     ref_yaw = atan2(ref_y-ref_y_prev, ref_x-ref_x_prev);
     ptsx.push_back(ref_x_prev);
     ptsx.push_back(ref_x);
+    
     ptsy.push_back(ref_y_prev);
     ptsy.push_back(ref_y); 
   }
-  
   // find another 3 points in the future
   for(int i = 1; i <4; i++){
     vector<double> next_wp = getXY(car_s + 30*i, 2 + 4*lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
     ptsx.push_back(next_wp[0]);
     ptsy.push_back(next_wp[1]);
   }
-  
   // shift to car coordinates
   for(int i=0; i <ptsx.size(); i++){
     double shift_x = ptsx[i] - ref_x;
@@ -281,10 +304,8 @@ vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double c
   double target_y = s(target_x);
   double target_dist = sqrt(target_x*target_x + target_y*target_y);
   double x_add_on = 0;
-  
+  double N = target_dist/(0.02*ref_vel/2.24);
   for( int i = 1; i < 50 - prev_size; i++ ) {
-
-    double N = target_dist/(0.02*ref_vel/2.24);
     double x_point = x_add_on + target_x/N;
     double y_point = s(x_point);    
     x_add_on = x_point;    
@@ -300,10 +321,10 @@ vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double c
     next_x_vals.push_back(x_point);
     next_y_vals.push_back(y_point);
   }
-  
   vector<vector<double>> next_vals;
   next_vals.push_back(next_x_vals);
   next_vals.push_back(next_y_vals);
+  
   return next_vals;
 }
 #endif  // HELPERS_H
