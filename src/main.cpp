@@ -57,99 +57,99 @@ int main() {
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
-    // "42" at the start of the message means there's a websocket message event.
-    // The 4 signifies a websocket message
-    // The 2 signifies a websocket event
-    if (length && length > 2 && data[0] == '4' && data[1] == '2') {
+                // "42" at the start of the message means there's a websocket message event.
+                // The 4 signifies a websocket message
+                // The 2 signifies a websocket event
+                if (length && length > 2 && data[0] == '4' && data[1] == '2') {
 
-      auto s = hasData(data);
+                  auto s = hasData(data);
 
-      if (s != "") {
-        auto j = json::parse(s);
-        
-        string event = j[0].get<string>();
-        
-        if (event == "telemetry") {
-          // j[1] is the data JSON object
-          
-          // Main car's localization Data
-          double car_x = j[1]["x"];
-          double car_y = j[1]["y"];
-          double car_s = j[1]["s"];
-          double car_d = j[1]["d"];
-          double car_yaw = j[1]["yaw"];
-          double car_speed = j[1]["speed"];
+                  if (s != "") {
+                    auto j = json::parse(s);
 
-          // Previous path data given to the Planner
-          auto previous_path_x = j[1]["previous_path_x"];
-          auto previous_path_y = j[1]["previous_path_y"];
-          // Previous path's end s and d values 
-          double end_path_s = j[1]["end_path_s"];
-          double end_path_d = j[1]["end_path_d"];
+                    string event = j[0].get<string>();
 
-          // Sensor Fusion Data, a list of all other cars on the same side 
-          //   of the road.
-          vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
-          
-          int prev_size = previous_path_x.size();
-          if(prev_size >0)
-            car_s = end_path_s;
-          vector<double> predictions = get_predictions_from_sensor_fusion(sensor_fusion, prev_size, car_s, lane);
+                    if (event == "telemetry") {
+                      // j[1] is the data JSON object
 
-          // Behaviour planning
-          bool car_left = predictions[0];
-          bool car_right = predictions[1];
-          bool car_front = predictions[2];
-          double front_speed = predictions[3];
-          std::cout<< "current state: " <<lane << "   " << ref_vel << std::endl;
-          std::cout<< "predictions: " << car_left << car_right<< car_front << std::endl;
-          std::vector<std::pair<int, double>> successors = behaviour_planning(car_left, car_right, car_front, lane, ref_vel, front_speed);
-          // choose the least cost trajectory
-          double lowest_cost = 999999;
-         for(int i = 0; i < successors.size(); i++){
-            
-            int successor_lane = successors[i].first;
-            double successor_ref_vel = successors[i].second;
-            // calculate cost
-            double cost = calculate_cost(lane, car_speed, successor_lane, successor_ref_vel);
-          // get the lowest cost and corresponding trajectory
-            if(cost < lowest_cost){
-              lowest_cost = cost;
-              lane = successor_lane;
-              ref_vel = successor_ref_vel;
-            }
-         }
+                      // Main car's localization Data
+                      double car_x = j[1]["x"];
+                      double car_y = j[1]["y"];
+                      double car_s = j[1]["s"];
+                      double car_d = j[1]["d"];
+                      double car_yaw = j[1]["yaw"];
+                      double car_speed = j[1]["speed"];
 
-          std::cout<< "successors size:<<<<<<<<<< " << successors.size() << std::endl;
-          std::cout<< "successor 0:<<<<<<<<<< " << successors[0].first << successors[0].second << std::endl;
-          std::cout<< "best successor choice:  " << lane << "     " << ref_vel << std::endl;
-          if(successors.size()>1){
-            std::cout<< "successor 1:<<<<<<<<<< " << successors[1].first << successors[1].second << std::endl;
+                      // Previous path data given to the Planner
+                      auto previous_path_x = j[1]["previous_path_x"];
+                      auto previous_path_y = j[1]["previous_path_y"];
+                      // Previous path's end s and d values 
+                      double end_path_s = j[1]["end_path_s"];
+                      double end_path_d = j[1]["end_path_d"];
 
-          }
-          // Trajectory generation
-          vector<vector<double>> best_trajectory = choose_next_trajectory(lane, ref_vel, car_x, car_y, car_yaw, car_s, car_d, 
-                                               map_waypoints_s, map_waypoints_x, map_waypoints_y,
-                                             previous_path_x, previous_path_y);
-          /**
+                      // Sensor Fusion Data, a list of all other cars on the same side 
+                      //   of the road.
+                      vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
+
+                      int prev_size = previous_path_x.size();
+                      if(prev_size >0)
+                        car_s = end_path_s;
+                      vector<double> predictions = get_predictions_from_sensor_fusion(sensor_fusion, prev_size, car_s, lane);
+
+                      // Behaviour planning
+                      bool car_left = predictions[0];
+                      bool car_right = predictions[1];
+                      bool car_front = predictions[2];
+                      double front_speed = predictions[3];
+                      std::cout<< "current state: " <<lane << "   " << ref_vel << std::endl;
+                      std::cout<< "predictions: " << car_left << car_right<< car_front << std::endl;
+                      std::vector<std::pair<int, double>> successors = behaviour_planning(car_left, car_right, car_front, lane, ref_vel, front_speed);
+                      // choose the least cost trajectory
+                      double lowest_cost = 999999;
+                      for(int i = 0; i < successors.size(); i++){
+
+                        int successor_lane = successors[i].first;
+                        double successor_ref_vel = successors[i].second;
+                        // calculate cost
+                        double cost = calculate_cost(lane, car_speed, successor_lane, successor_ref_vel);
+                        // get the lowest cost and corresponding trajectory
+                        if(cost < lowest_cost){
+                          lowest_cost = cost;
+                          lane = successor_lane;
+                          ref_vel = successor_ref_vel;
+                        }
+                      }
+
+                      std::cout<< "successors size:<<<<<<<<<< " << successors.size() << std::endl;
+                      std::cout<< "successor 0:<<<<<<<<<< " << successors[0].first << successors[0].second << std::endl;
+                      std::cout<< "best successor choice:  " << lane << "     " << ref_vel << std::endl;
+                      if(successors.size()>1){
+                        std::cout<< "successor 1:<<<<<<<<<< " << successors[1].first << successors[1].second << std::endl;
+
+                      }
+                      // Trajectory generation
+                      vector<vector<double>> best_trajectory = choose_next_trajectory(lane, ref_vel, car_x, car_y, car_yaw, car_s, car_d, 
+                                                                                      map_waypoints_s, map_waypoints_x, map_waypoints_y,
+                                                                                      previous_path_x, previous_path_y);
+                      /**
            * generate the best path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
            */
-          json msgJson;
-          msgJson["next_x"] = best_trajectory[0];
-          msgJson["next_y"] = best_trajectory[1];
+                      json msgJson;
+                      msgJson["next_x"] = best_trajectory[0];
+                      msgJson["next_y"] = best_trajectory[1];
 
-          auto msg = "42[\"control\","+ msgJson.dump()+"]";
+                      auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
-          ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-        }  // end "telemetry" if
-      } else {
-        // Manual driving
-        std::string msg = "42[\"manual\",{}]";
-        ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-      }
-    }  // end websocket if
-  }); // end h.onMessage
+                      ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+                    }  // end "telemetry" if
+                  } else {
+                    // Manual driving
+                    std::string msg = "42[\"manual\",{}]";
+                    ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+                  }
+                }  // end websocket if
+              }); // end h.onMessage
 
   h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
     std::cout << "Connected!!!" << std::endl;
@@ -168,6 +168,6 @@ int main() {
     std::cerr << "Failed to listen to port" << std::endl;
     return -1;
   }
-  
+
   h.run();
 }

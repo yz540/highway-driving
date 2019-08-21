@@ -156,7 +156,7 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
 }
 
 int get_lane(int d){
-	return (int)(d/4);
+  return (int)(d/4);
 }
 
 vector<double> get_predictions_from_sensor_fusion(vector<vector<double>> sensor_fusion, int prev_size, double car_s, int lane){
@@ -188,7 +188,7 @@ vector<double> get_predictions_from_sensor_fusion(vector<vector<double>> sensor_
       }
     }
   }
-  
+
   return {car_left, car_right, car_front, front_speed};
 }
 
@@ -209,17 +209,17 @@ vector<std::pair<int, double>> behaviour_planning(bool car_left, bool car_right,
 }
 
 double calculate_cost(int lane, double car_speed, int successor_lane, double successor_ref_vel){
-  
+
   double cost_lane_change = std::abs(lane - successor_lane)/3;
-// cost of acceleration  
+  // cost of acceleration  
   double acc = (successor_ref_vel - car_speed)/0.02;
   double cost_acc = 0;
   if(acc<-9.8 || acc >9.8)
     cost_acc = 1;
   else
     cost_acc = std::abs(acc)/9.8;
-  
-//   cost of speed
+
+  //   cost of speed
   double target_speed = 49.5/2.24;
   double cost_speed = 0;
   if(successor_ref_vel < target_speed)
@@ -230,15 +230,15 @@ double calculate_cost(int lane, double car_speed, int successor_lane, double suc
     else
       cost_speed = (successor_ref_vel - target_speed) / 0.5;
   }
-  
-  
+
+
   return 10*cost_lane_change + 10*cost_acc + 5*cost_speed;
 }
 
 vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double car_x, double car_y, double car_yaw, double car_s, double car_d, 
                                               const vector<double> &map_waypoints_s, const vector<double> &map_waypoints_x, const vector<double> &map_waypoints_y,
-                                             vector<double> previous_path_x, vector<double> previous_path_y ){
-  
+                                              vector<double> previous_path_x, vector<double> previous_path_y ){
+
   int prev_size = previous_path_x.size();
   double ref_x = car_x;
   double ref_y = car_y;
@@ -251,11 +251,11 @@ vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double c
     double prev_car_y = car_y - sin(car_yaw);    
     ptsx.push_back(prev_car_x);
     ptsx.push_back(car_x);    
-    
+
     ptsy.push_back(prev_car_y);
     ptsy.push_back(car_y);
-   }else{
-   //Redefine the reference point to previous point
+  }else{
+    //Redefine the reference point to previous point
     ref_x = previous_path_x[prev_size - 1];
     ref_y = previous_path_y[prev_size - 1];
     double ref_x_prev = previous_path_x[prev_size - 2];
@@ -263,7 +263,7 @@ vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double c
     ref_yaw = atan2(ref_y-ref_y_prev, ref_x-ref_x_prev);
     ptsx.push_back(ref_x_prev);
     ptsx.push_back(ref_x);
-    
+
     ptsy.push_back(ref_y_prev);
     ptsy.push_back(ref_y); 
   }
@@ -277,14 +277,14 @@ vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double c
   for(int i=0; i <ptsx.size(); i++){
     double shift_x = ptsx[i] - ref_x;
     double shift_y = ptsy[i] - ref_y;
-    
+
     ptsx[i] = (shift_x*cos(-ref_yaw) - shift_y*sin(-ref_yaw));
     ptsy[i] = (shift_x*sin(-ref_yaw) + shift_y*cos(-ref_yaw));
   }
   // build the spline based on the 5 points
   tk::spline s;
   s.set_points(ptsx, ptsy);
-  
+
   vector<double> next_x_vals;
   vector<double> next_y_vals;
   //For the smooth transition, we are adding previous path points
@@ -323,7 +323,7 @@ vector<vector<double>> choose_next_trajectory(int lane, double ref_vel, double c
   vector<vector<double>> next_vals;
   next_vals.push_back(next_x_vals);
   next_vals.push_back(next_y_vals);
-  
+
   return next_vals;
 }
 #endif  // HELPERS_H
