@@ -60,7 +60,6 @@ int main() {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
-                std::cout << "new start............." << std::endl;
     if (length && length > 2 && data[0] == '4' && data[1] == '2') {
 
       auto s = hasData(data);
@@ -80,7 +79,6 @@ int main() {
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
           double car_speed = j[1]["speed"];
-          ref_vel = car_speed;
 
           // Previous path data given to the Planner
           auto previous_path_x = j[1]["previous_path_x"];
@@ -99,18 +97,16 @@ int main() {
           vector<double> predictions = get_predictions_from_sensor_fusion(sensor_fusion, prev_size, car_s, lane);
 
           // Behaviour planning
-          bool car_front = predictions[2];
-          double front_speed = predictions[3];
           bool car_left = predictions[0];
           bool car_right = predictions[1];
-          
+          bool car_front = predictions[2];
+          double front_speed = predictions[3];
+          std::cout<< "current state: " <<lane << "   " << ref_vel << std::endl;
+          std::cout<< "predictions: " << car_left << car_right<< car_front << std::endl;
           std::vector<std::pair<int, double>> successors = behaviour_planning(car_left, car_right, car_front, lane, ref_vel, front_speed);
           // choose the least cost trajectory
           double lowest_cost = 999999;
-          std::cout<< "current state: " <<lane << "   " << car_speed << std::endl;
-          std::cout<< "predictions: " << car_front << car_left << car_right<< std::endl;
-          std::cout<< "successors size:<<<<<<<<<< " << successors.size() << std::endl;
-          for(int i = 0; i < successors.size(); i++){
+         for(int i = 0; i < successors.size(); i++){
             
             int successor_lane = successors[i].first;
             double successor_ref_vel = successors[i].second;
@@ -122,8 +118,15 @@ int main() {
               lane = successor_lane;
               ref_vel = successor_ref_vel;
             }
-          }
+         }
+
+          std::cout<< "successors size:<<<<<<<<<< " << successors.size() << std::endl;
+          std::cout<< "successor 0:<<<<<<<<<< " << successors[0].first << successors[0].second << std::endl;
           std::cout<< "best successor choice:  " << lane << "     " << ref_vel << std::endl;
+          if(successors.size()>1){
+            std::cout<< "successor 1:<<<<<<<<<< " << successors[1].first << successors[1].second << std::endl;
+
+          }
           // Trajectory generation
           vector<vector<double>> best_trajectory = choose_next_trajectory(lane, ref_vel, car_x, car_y, car_yaw, car_s, car_d, 
                                                map_waypoints_s, map_waypoints_x, map_waypoints_y,
