@@ -5,14 +5,9 @@ The path planning for highway is simplified. It includes mainly three parts:
 *behaviour planning to decide at a high level about what the car should do in the next 1 second, and 
 *trajectory generation to create a smooth, drivable and collision free trajectory for the controller to follow.
 
-[//]: # (Image References)
-[image1]: Path planning.JPG
-[image2]: simulator_result_keep_lane.JPG
-[image3]: simulator_result_change_lane.JPG
-
 The role of path planning in self driving car is shown in the following graph from Udacity class.
 
-![path_planning][image1]
+![path_planning] (Path planning.JPG)
 
 The corresponding code is within the main.cpp file.
 ```cpp
@@ -82,8 +77,8 @@ I simply used a vector of chosen lane and reference velocity to represent the st
 
 **Results**
 The ego vehicle managed to drive safely for more than 4.32 miles and changed lane when condition allowed.
-![simulator_result_keep_lane][image2]
-![simulator_result_change_lane][image3]
+![simulator_result_keep_lane](simulator_result_keep_lane.JPG)
+![simulator_result_change_lane](simulator_result_change_lane.JPG)
 
 **To improve:**
 * 1> Make use of the speed and distance from neighbouring vehicles to include cost of collision.
