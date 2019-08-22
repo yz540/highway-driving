@@ -7,7 +7,7 @@ The path planning for highway is simplified. It includes mainly three parts:
 
 The role of path planning in self driving car is shown in the following graph from Udacity class.
 
-![path_planning] (Path planning.JPG)
+![path_planning](path_planning.JPG)
 
 The corresponding code is within the main.cpp file.
 ```cpp
