@@ -6,9 +6,9 @@ The path planning for highway is simplified. It includes mainly three parts:
 *trajectory generation to create a smooth, drivable and collision free trajectory for the controller to follow.
 
 [//]: # (Image References)
-[image1]: path_planning.jpg
-[image2]: simulator_result_keep_lane.jpg
-[image3]: simulator_result_change_lane.jpg
+[image1]: Path planning.JPG
+[image2]: simulator_result_keep_lane.JPG
+[image3]: simulator_result_change_lane.JPG
 
 The role of path planning in self driving car is shown in the following graph from Udacity class.
 
