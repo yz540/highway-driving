@@ -89,10 +89,10 @@ The ego vehicle managed to drive safely for more than 4.32 miles and changed lan
 
 **Further readings**
 I passed the project review and the reviewer recommended me to read more matterials in the following links.
-http://correll.cs.colorado.edu/?p=965
-https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume9/mazer98a-html/node2.html
-https://robotics.stackexchange.com/questions/8302/what-is-the-difference-between-path-planning-and-motion-planning
-http://ais.informatik.uni-freiburg.de/teaching/ss11/robotics/slides/18-robot-motion-planning.pdf
-http://ais.informatik.uni-freiburg.de/teaching/ss10/robotics/slides/16-pathplanning.pdf
+[Introduction to Robotics #4: Path-Planning](http://correll.cs.colorado.edu/?p=965)
+[The path planning problem in depth](https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume9/mazer98a-html/node2.html)
+[A discussion on What is the difference between path planning and motion planning? ](https://robotics.stackexchange.com/questions/8302/what-is-the-difference-between-path-planning-and-motion-planning)
+[Introduction to robot motion: Robot Motion Planning ](http://ais.informatik.uni-freiburg.de/teaching/ss11/robotics/slides/18-robot-motion-planning.pdf)
+[Introduction to robot motion: Path Planning and Collision Avoidance](http://ais.informatik.uni-freiburg.de/teaching/ss10/robotics/slides/16-pathplanning.pdf)
 
 
