@@ -87,6 +87,12 @@ The ego vehicle managed to drive safely for more than 4.32 miles and changed lan
 * 4> The code is based on the provided project code which is not well designed and structured. Further improvement can be done to
   improve readibility, structure and extendability.
 
-
+**Further readings**
+I passed the project review and the reviewer recommended me to read more matterials in the following links.
+http://correll.cs.colorado.edu/?p=965
+https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume9/mazer98a-html/node2.html
+https://robotics.stackexchange.com/questions/8302/what-is-the-difference-between-path-planning-and-motion-planning
+http://ais.informatik.uni-freiburg.de/teaching/ss11/robotics/slides/18-robot-motion-planning.pdf
+http://ais.informatik.uni-freiburg.de/teaching/ss10/robotics/slides/16-pathplanning.pdf
 
 
